@@ -67,54 +67,9 @@
 //               DD  DSN=CICSTS61.CICS.SDFHLOAD,DISP=SHR
 //*-------------------------------------------------------------------*
 //* SYSIN OVERRIDE - SIT PARAMETER OVERRIDES FOR CICSDEV1             *
-//*   These inline parameters supplement the base SIT member          *
-//*   CDEV1SIT and take precedence over SIT member values.            *
-//*   Refer to CICS TS 6.1 System Initialization Parameter Reference. *
+//*   Additional SIT overrides are supplied via dataset CDEVY1SIT.    *
 //*-------------------------------------------------------------------*
-//CICSREG.SYSIN DD  *
-*-------------------------------------------------------------------*
-* SIT PARAMETER OVERRIDES FOR CICSDEV1                              *
-* BASE SIT MEMBER: CDEV1SIT                                         *
-* CICS TS VERSION: 6.1                                              *
-*-------------------------------------------------------------------*
-* --- REGION IDENTITY ---
-  APPLID=CICSDEV1,
-* --- CICSPLEX SM ---
-  GRPNAME=DEVPLXG1,
-  PLXNAME=DEVPLEX,
-* --- STORAGE MANAGEMENT ---
-  DSALIM=500M,
-  EDSALIMIT=2G,
-  OSCOR=4M,
-* --- TRACE ---
-  GTRACE=NO,
-  STATOPC=NO,
-  AUXTRC=NO,
-* --- MONITORING ---
-  MONITOR=(STATUS,PERF,EXCEPTION),
-  MCTIME=60,
-* --- TRANSACTION ISOLATION ---
-  TRANISO=DWORD,
-* --- SECURITY ---
-  SEC=YES,
-  SECPRFX=CICSDEV1,
-  XDCT=NO,
-  XFCT=NO,
-  XHFS=NO,
-  XJCT=NO,
-  XPCT=NO,
-  XPPT=NO,
-  XPSB=NO,
-  XTRAN=YES,
-  XUSER=YES,
-* --- STORAGE PROTECTION ---
-  STGPROT=YES,
-  RENTPGM=PROTECT,
-* --- JOURNALING ---
-  JOUROPT=NONE,
-* --- STARTUP TYPE ---
-  START=COLD
-/*
+//CICSREG.SYSIN DD  DSN=CDEVY1SIT,DISP=SHR
 //*-------------------------------------------------------------------*
 //* END OF CICSDEV1 STARTUP JCL                                       *
 //*-------------------------------------------------------------------*
