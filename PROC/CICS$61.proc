@@ -1,0 +1,148 @@
+//*-------------------------------------------------------------------*
+//* PROC NAME : CICS$61                                               *
+//* DESCRIPTION: COMMON CICS TRANSACTION SERVER 6.1 STARTUP PROCEDURE*
+//*              DESIGNED TO BE PORTABLE ACROSS ALL LPARS AND USABLE  *
+//*              BY ANY CICS REGION VIA SYMBOLIC PARAMETER OVERRIDES.  *
+//*                                                                    *
+//* SYMBOLIC PARAMETERS:                                               *
+//*   RGNNAME  - CICS Region job name / region identifier (max 8 chr) *
+//*   APPLID   - VTAM Application ID for this region (max 8 chr)      *
+//*   SITMBR   - SIT (System Init Table) parmlib member name          *
+//*   HLQCICS  - High-level qualifier for CICS 6.1 product libraries  *
+//*   HLQREGN  - High-level qualifier for region-specific datasets     *
+//*   HLQAPP   - High-level qualifier for application load libraries   *
+//*   GRPNAME  - CICSPlex XCF group name (MAS coupling)               *
+//*   PLXNAME  - CICSPlex SM plex name                                *
+//*   CICSSTOR - JCL REGION size allocated to CICS address space      *
+//*   SYSOUT   - SYSOUT class for JES output DD statements            *
+//*   MSGLVL   - CICS message level (0=min, 1=standard, 2=verbose)    *
+//*                                                                    *
+//* DATASET NAMING CONVENTIONS:                                        *
+//*   CICS SYSTEM:   &HLQCICS..SDFH*                                  *
+//*   REGION VSAM:   &HLQREGN..&RGNNAME..*                            *
+//*   APPLICATION:   &HLQAPP..LOADLIB                                  *
+//*                                                                    *
+//* USAGE:  CALL FROM REGION STARTUP JCL SUPPLYING ALL REGION-SPECIFIC *
+//*         SYMBOLICS. GENERIC DDs MAY BE OVERRIDDEN AT THE JCL LEVEL. *
+//*                                                                    *
+//* CHANGE LOG:                                                        *
+//*   DATE       AUTHOR        DESCRIPTION                             *
+//*   2026-02-19 MIGRATION-TM  INITIAL VERSION FOR CICS TS 6.1        *
+//*-------------------------------------------------------------------*
+//CICS$61  PROC                                                        +
+//             RGNNAME=,          /* CICS Region Name (REQUIRED)       */+
+//             APPLID=,           /* VTAM APPLID    (REQUIRED)         */+
+//             SITMBR=DFHSIT,     /* SIT Member in parmlib             */+
+//             HLQCICS=CICSTS61.CICS, /* CICS Product HLQ              */+
+//             HLQREGN=CICS.REGIONS,  /* Region Datasets HLQ           */+
+//             HLQAPP=APP.LOADLIB,    /* Application Libraries HLQ     */+
+//             GRPNAME=CICSPLEX1, /* CICSPlex XCF Group Name           */+
+//             PLXNAME=PLEX1,     /* CICSPlex SM Plex Name             */+
+//             CICSSTOR=256M,     /* CICS Address Space Storage        */+
+//             SYSOUT=A,          /* SYSOUT Class                      */+
+//             MSGLVL=1           /* CICS Message Verbosity Level      */
+//*-------------------------------------------------------------------*
+//* MAIN CICS STARTUP STEP                                             *
+//* PGM DFHSIP - CICS System Initialization Program                   *
+//*-------------------------------------------------------------------*
+//IEFPROC  EXEC PGM=DFHSIP,                                           +
+//             TIME=1440,                                              +
+//             REGION=&CICSSTOR,                                       +
+//             PARM='SI=&SITMBR,APPLID=&APPLID'
+//*-------------------------------------------------------------------*
+//* STEPLIB - AUTHORIZED CICS SYSTEM LOAD LIBRARIES                   *
+//*   NOTE: SDFHAUTH MUST BE IN AN AUTHORIZED LIBRARY CONCATENATION.  *
+//*         APF-AUTHORIZE ALL LIBRARIES IN THIS CONCAT.               *
+//*-------------------------------------------------------------------*
+//STEPLIB  DD  DSN=&HLQCICS..SDFHAUTH,DISP=SHR
+//         DD  DSN=&HLQCICS..SDFHLOAD,DISP=SHR
+//         DD  DSN=CEE.SCEERUN,DISP=SHR
+//         DD  DSN=CEE.SCEERUN2,DISP=SHR
+//*-------------------------------------------------------------------*
+//* DFHRPL - APPLICATION REGION PROGRAM LIBRARY CONCATENATION         *
+//*   NOTE: ORDER IS SIGNIFICANT. REGION-SPECIFIC FIRST, THEN SHARED. *
+//*         OVERRIDE OR EXTEND THIS CONCAT FROM THE CALLING JCL.      *
+//*-------------------------------------------------------------------*
+//DFHRPL   DD  DSN=&HLQAPP..LOADLIB,DISP=SHR
+//         DD  DSN=&HLQCICS..SDFHLOAD,DISP=SHR
+//*-------------------------------------------------------------------*
+//* CICS VSAM DATASETS - REGION SPECIFIC                              *
+//*-------------------------------------------------------------------*
+//* DFHCSD  - CICS System Definition File (VSAM KSDS)                 *
+//*           May be shared across regions in a CICSPlex.             *
+//DFHCSD   DD  DSN=&HLQREGN..DFHCSD,DISP=SHR
+//*
+//* DFHTEMP - Temporary Storage Main Dataset (VSAM KSDS)              *
+//DFHTEMP  DD  DSN=&HLQREGN..&RGNNAME..TEMP,DISP=SHR
+//*
+//* DFHINTRA - Intrapartition Transient Data Queue Dataset (VSAM ESDS)*
+//DFHINTRA DD  DSN=&HLQREGN..&RGNNAME..INTRA,DISP=SHR
+//*
+//* DFHGCD  - Global Catalog Dataset (VSAM KSDS)                      *
+//*           Required for CICSPlex SM managed regions.               *
+//DFHGCD   DD  DSN=&HLQREGN..&RGNNAME..GCD,DISP=SHR
+//*
+//* DFHLCD  - Local Catalog Dataset (VSAM KSDS)                       *
+//DFHLCD   DD  DSN=&HLQREGN..&RGNNAME..LCD,DISP=SHR
+//*-------------------------------------------------------------------*
+//* CICS TRACE DATASETS                                               *
+//*   DFHAUXT / DFHBUXT - Auxiliary Trace (A/B sides, sequential)     *
+//*-------------------------------------------------------------------*
+//DFHAUXT  DD  DSN=&HLQREGN..&RGNNAME..AUXTRACE.A,
+//             DISP=SHR
+//DFHBUXT  DD  DSN=&HLQREGN..&RGNNAME..AUXTRACE.B,
+//             DISP=SHR
+//*-------------------------------------------------------------------*
+//* CICS TRANSACTION DUMP DATASETS                                    *
+//*   DFHDMPA / DFHDMPB - Transaction Dump (A/B sides, sequential)    *
+//*-------------------------------------------------------------------*
+//DFHDMPA  DD  DSN=&HLQREGN..&RGNNAME..TXDUMP.A,
+//             DISP=SHR
+//DFHDMPB  DD  DSN=&HLQREGN..&RGNNAME..TXDUMP.B,
+//             DISP=SHR
+//*-------------------------------------------------------------------*
+//* CICS SNAP AND SYSTEM DIAGNOSTIC DATASETS                          *
+//*-------------------------------------------------------------------*
+//DFHSNAP  DD  DSN=&HLQREGN..&RGNNAME..SNAP,
+//             DISP=SHR
+//*
+//* CICS Dump Table - controls dump suppression                       *
+//DFHDMPDS DD  DSN=&HLQREGN..&RGNNAME..DMPDS,DISP=SHR
+//*-------------------------------------------------------------------*
+//* LANGUAGE ENVIRONMENT (LE) OUTPUT DATASETS                         *
+//*-------------------------------------------------------------------*
+//CEEMSG   DD  SYSOUT=&SYSOUT
+//CEEOUT   DD  SYSOUT=&SYSOUT
+//CEEDUMP  DD  SYSOUT=&SYSOUT
+//*-------------------------------------------------------------------*
+//* JES SYSOUT DATASETS                                               *
+//*-------------------------------------------------------------------*
+//SYSPRINT DD  SYSOUT=&SYSOUT
+//SYSUDUMP DD  SYSOUT=&SYSOUT
+//LOGUSR   DD  SYSOUT=&SYSOUT
+//MSGUSR   DD  SYSOUT=&SYSOUT
+//*-------------------------------------------------------------------*
+//* CICS JOURNAL / LOG MANAGER DATASETS                               *
+//*   Forward Recovery Logs and System Log                            *
+//*-------------------------------------------------------------------*
+//* System Log - Primary and Secondary Extents (VSAM ESDS)            *
+//DFHJ01I  DD  DSN=&HLQREGN..&RGNNAME..SLOG.PRIMARY,DISP=SHR
+//DFHJ01S  DD  DSN=&HLQREGN..&RGNNAME..SLOG.SECONDARY,DISP=SHR
+//*-------------------------------------------------------------------*
+//* CICS MAS (MANAGED APPLICATION SYSTEM) - CICSPlex XCF COUPLING    *
+//*-------------------------------------------------------------------*
+//IXCREGDS DD  DSN=&HLQREGN..&RGNNAME..XCFREGDS,DISP=SHR
+//*-------------------------------------------------------------------*
+//* SIT PARAMETER OVERRIDES                                           *
+//*   SYSIN supplies inline SIT parameter overrides beyond the base   *
+//*   SIT member. Calling JCL may override this DD with its own SYSIN.*
+//*-------------------------------------------------------------------*
+//SYSIN    DD  *
+  GRPNAME=&GRPNAME,
+  PLXNAME=&PLXNAME,
+  MSGLVL=&MSGLVL
+/*
+//*-------------------------------------------------------------------*
+//* END OF PROC CICS$61                                               *
+//*-------------------------------------------------------------------*
+//         PEND

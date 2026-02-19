@@ -1,0 +1,92 @@
+*-------------------------------------------------------------------*
+* SIT MEMBER  : CDEV1SIT                                            *
+* DESCRIPTION : BASE SYSTEM INITIALIZATION TABLE PARAMETERS FOR     *
+*               CICS DEVELOPMENT REGION 1 (CICSDEV1)               *
+*               STORED IN: CICSTS61.CICS.SDFHPARM(CDEV1SIT)        *
+*                                                                    *
+* This member defines the base SIT values for CICSDEV1.             *
+* Additional overrides are supplied via SYSIN in the startup JCL    *
+* (CICSDEV1.jcl) and take precedence over values set here.         *
+*                                                                    *
+* CICS TS 6.1 System Initialization Parameter Reference:            *
+*   IBM Documentation: CICS Transaction Server for z/OS 6.1        *
+*                                                                    *
+* CHANGE LOG:                                                        *
+*   DATE       AUTHOR        DESCRIPTION                            *
+*   2026-02-19 MIGRATION-TM  INITIAL VERSION FOR CICS TS 6.1        *
+*-------------------------------------------------------------------*
+*
+* --- REGION IDENTITY AND VTAM ---
+  APPLID=CICSDEV1,
+  SYSIDNT=DEV1,
+*
+* --- CICSPLEX SM MANAGED REGION ---
+  CICSPLEX=(GRPNAME=DEVPLXG1,PLXNAME=DEVPLEX),
+*
+* --- STORAGE THRESHOLDS ---
+  DSALIM=500M,
+  EDSALIMIT=2G,
+  OSCOR=4M,
+  STGPROT=YES,
+  RENTPGM=PROTECT,
+  TRANISO=DWORD,
+*
+* --- STARTUP / SHUTDOWN ---
+  START=COLD,
+  SDTRAN=CESD,
+*
+* --- LANGUAGE ENVIRONMENT ---
+  LERUNOPTS=CEEENV,
+*
+* --- DB2 ATTACHMENT ---
+  ATTACHSEC=VERIFY,
+  DB2CONN=NO,
+*
+* --- MQ ATTACHMENT ---
+  ISC=YES,
+*
+* --- TCP/IP SERVICES ---
+  TCPIP=YES,
+  TCPIPSERVICE=(HTTPD,3270),
+*
+* --- SECURITY ---
+  SEC=YES,
+  SECPRFX=CICSDEV1,
+  XDCT=NO,
+  XFCT=NO,
+  XHFS=NO,
+  XJCT=NO,
+  XPCT=NO,
+  XPPT=NO,
+  XPSB=NO,
+  XTRAN=YES,
+  XUSER=YES,
+*
+* --- STORAGE MANAGEMENT ---
+  DSHIPINT=999,
+  DSHIPIDL=999,
+*
+* --- STATISTICS ---
+  STATS=YES,
+  STATOPC=NO,
+  STATINT=010000,
+*
+* --- MONITORING ---
+  MONITOR=(STATUS,PERF,EXCEPTION),
+  MCTIME=60,
+*
+* --- TRACING ---
+  AUXTRC=NO,
+  GTRACE=NO,
+  MSGLVL=1,
+*
+* --- JOURNALING ---
+  JOUROPT=NONE,
+*
+* --- WLMOPEN ---
+  WLMOPEN=NO,
+*
+* --- FEPI ---
+  FEPI=NO,
+*
+* --- END OF CDEV1SIT ---
